@@ -109,6 +109,8 @@
         position: relative;
         backdrop-filter: blur(10px);
         overflow: hidden;
+        transform: translate3d(var(--card-x, 0px), var(--card-y, 0px), 0);
+        transition: transform 0.6s ease, opacity 0.6s ease;
       }
 
       .card::before {
@@ -251,6 +253,7 @@
         z-index: 0;
         -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.7) 70%, rgba(0, 0, 0, 0.65) 100%);
         mask-image: linear-gradient(180deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.7) 70%, rgba(0, 0, 0, 0.65) 100%);
+        transition: opacity 0.6s ease, filter 0.6s ease;
       }
 
       .hearts-front {
@@ -261,6 +264,7 @@
         z-index: 3;
         -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 35%, rgba(0, 0, 0, 0.35) 100%);
         mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 35%, rgba(0, 0, 0, 0.35) 100%);
+        transition: opacity 0.6s ease, filter 0.6s ease;
       }
 
       .heart {
@@ -294,6 +298,9 @@
         padding: 38px 38px 44px;
         box-shadow: 0 14px 40px var(--shadow);
         position: relative;
+        transform: translateY(8px);
+        opacity: 0;
+        transition: transform 0.8s ease, opacity 0.8s ease;
       }
 
       .final-card::before {
@@ -307,8 +314,11 @@
 
       .letter {
         background: #fff7fb;
+        background-image:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0)),
+          repeating-linear-gradient(0deg, rgba(222, 199, 154, 0.12), rgba(222, 199, 154, 0.12) 1px, rgba(255, 255, 255, 0) 5px);
         border-radius: 18px;
-        padding: 28px 26px 30px;
+        padding: 30px 28px 34px;
         box-shadow: inset 0 0 0 1px rgba(184, 139, 58, 0.2);
       }
 
@@ -327,6 +337,13 @@
         min-height: 260px;
       }
 
+      .cursor {
+        display: inline-block;
+        margin-left: 3px;
+        width: 8px;
+        animation: blink 1s steps(2) infinite;
+      }
+
       .confetti-layer {
         position: absolute;
         inset: 0;
@@ -335,12 +352,14 @@
         z-index: 4;
       }
 
-      .confetti {
+      .petal {
         position: absolute;
-        width: 8px;
-        height: 14px;
-        opacity: 0.9;
-        animation: fall 3.2s linear forwards;
+        width: 14px;
+        height: 22px;
+        background: radial-gradient(circle at 30% 30%, #ffdbe6, #ff7d9c 70%);
+        border-radius: 60% 60% 70% 70%;
+        opacity: 0.85;
+        animation: fallPetal 4.8s linear forwards;
       }
 
       .monogram {
@@ -352,14 +371,69 @@
         text-transform: uppercase;
       }
 
-      @keyframes fall {
+      @keyframes fallPetal {
         0% {
-          transform: translateY(-20px) rotate(0deg);
+          transform: translateY(-30px) rotate(0deg) translateX(0);
         }
         100% {
-          transform: translateY(110vh) rotate(540deg);
+          transform: translateY(110vh) rotate(380deg) translateX(40px);
+          opacity: 0.15;
+        }
+      }
+
+      @keyframes blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        51%,
+        100% {
           opacity: 0;
         }
+      }
+
+      .arrive {
+        animation: arrive 0.8s ease forwards;
+      }
+
+      @keyframes arrive {
+        0% {
+          opacity: 0;
+          transform: translateY(14px) scale(0.98);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .unlock-glow {
+        animation: unlockGlow 0.8s ease;
+      }
+
+      @keyframes unlockGlow {
+        0% {
+          box-shadow: 0 0 0 0 rgba(255, 77, 122, 0.6);
+        }
+        100% {
+          box-shadow: 0 0 0 18px rgba(255, 77, 122, 0);
+        }
+      }
+
+      .hearts-fade .hearts-bg,
+      .hearts-fade .hearts-front {
+        opacity: 0.2;
+        filter: blur(1px);
+      }
+
+      .question-exit .card {
+        opacity: 0;
+        transform: translate3d(var(--card-x, 0px), calc(var(--card-y, 0px) - 10px), 0) scale(1.02);
+      }
+
+      .final-show .final-card {
+        opacity: 1;
+        transform: translateY(0);
       }
 
       @media (max-width: 600px) {
@@ -393,7 +467,7 @@
     </section>
 
     <section class="screen hidden" id="questionScreen">
-      <div class="card">
+      <div class="card arrive" id="card">
         <h1>
           Mehak <span class="red-heart" aria-hidden="true">♥</span> Will you be my
           Valentine?
@@ -445,11 +519,40 @@
       const placeNoButton = () => {
         const areaRect = playArea.getBoundingClientRect();
         const btnRect = noBtn.getBoundingClientRect();
+        const yesRect = yesBtn.getBoundingClientRect();
+        const thinkRect = thinkBtn.getBoundingClientRect();
         const padding = 14;
+
         const maxX = areaRect.width - btnRect.width - padding;
         const maxY = areaRect.height - btnRect.height - padding;
-        const x = Math.max(padding, Math.random() * maxX);
-        const y = Math.max(padding, Math.random() * maxY);
+
+        const isOverlapping = (x, y, other) => {
+          const left = areaRect.left + x;
+          const top = areaRect.top + y;
+          const right = left + btnRect.width;
+          const bottom = top + btnRect.height;
+
+          return !(
+            right < other.left ||
+            left > other.right ||
+            bottom < other.top ||
+            top > other.bottom
+          );
+        };
+
+        let tries = 0;
+        let x = padding;
+        let y = padding;
+
+        do {
+          x = Math.max(padding, Math.random() * maxX);
+          y = Math.max(padding, Math.random() * maxY);
+          tries += 1;
+        } while (
+          (isOverlapping(x, y, yesRect) || isOverlapping(x, y, thinkRect)) &&
+          tries < 20
+        );
+
         noBtn.style.left = `${x}px`;
         noBtn.style.top = `${y}px`;
       };
@@ -463,6 +566,8 @@
         yesBtn.classList.remove("locked");
         yesBtn.removeAttribute("aria-disabled");
         yesBtn.classList.add("pulse-heart");
+        yesBtn.classList.add("unlock-glow");
+        setTimeout(() => yesBtn.classList.remove("unlock-glow"), 900);
       };
 
       const handleNoHover = () => {
@@ -505,12 +610,19 @@
         }).catch(() => {});
       };
 
+      const escapeHtml = (value) =>
+        value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
       const typewrite = (text) => {
-        typewriter.textContent = "";
+        typewriter.innerHTML = "";
         let i = 0;
         const tick = () => {
           if (i <= text.length) {
-            typewriter.textContent = text.slice(0, i);
+            const slice = escapeHtml(text.slice(0, i)).replace(/\n/g, "<br>");
+            typewriter.innerHTML = `${slice}<span class="cursor">|</span>`;
             i += 1;
             const lastChar = text[i - 1];
             const pause = lastChar === "\n" ? 520 : 36;
@@ -525,10 +637,15 @@
           return;
         }
         sendYesNotification();
-        questionScreen.classList.add("hidden");
-        finalScreen.classList.remove("hidden");
-        typewrite(noteText);
-        launchConfetti();
+        document.body.classList.add("hearts-fade");
+        questionScreen.classList.add("question-exit");
+        setTimeout(() => {
+          questionScreen.classList.add("hidden");
+          finalScreen.classList.remove("hidden");
+          finalScreen.classList.add("final-show");
+          typewrite(noteText);
+          launchPetals();
+        }, 650);
       };
 
       const spawnHearts = () => {
@@ -555,26 +672,53 @@
         }
       };
 
-      const launchConfetti = () => {
-        const colors = ["#ff4d7a", "#ff9fb2", "#ffd166", "#cdb4db", "#a2d2ff"];
-        for (let i = 0; i < 120; i += 1) {
+      const launchPetals = () => {
+        for (let i = 0; i < 80; i += 1) {
           const piece = document.createElement("div");
-          piece.className = "confetti";
+          piece.className = "petal";
           piece.style.left = `${Math.random() * 100}%`;
-          piece.style.background = colors[i % colors.length];
-          piece.style.animationDelay = `${Math.random() * 0.4}s`;
+          piece.style.animationDelay = `${Math.random() * 0.6}s`;
           piece.style.transform = `rotate(${Math.random() * 360}deg)`;
           confettiLayer.appendChild(piece);
           piece.addEventListener("animationend", () => piece.remove());
         }
       };
 
+      const setupParallax = () => {
+        let targetX = 0;
+        let targetY = 0;
+        let currentX = 0;
+        let currentY = 0;
+
+        const update = () => {
+          currentX += (targetX - currentX) * 0.06;
+          currentY += (targetY - currentY) * 0.06;
+          document.documentElement.style.setProperty("--card-x", `${currentX * 0.6}px`);
+          document.documentElement.style.setProperty("--card-y", `${currentY * 0.6}px`);
+          heartsBg.style.transform = `translate3d(${currentX * 1.2}px, ${currentY * 1.2}px, 0)`;
+          heartsFront.style.transform = `translate3d(${currentX * 1.6}px, ${currentY * 1.6}px, 0)`;
+          requestAnimationFrame(update);
+        };
+
+        const handleMove = (event) => {
+          const x = event.clientX / window.innerWidth - 0.5;
+          const y = event.clientY / window.innerHeight - 0.5;
+          targetX = x * 18;
+          targetY = y * 18;
+        };
+
+        window.addEventListener("mousemove", handleMove);
+        update();
+      };
+
       startBtn.addEventListener("click", () => {
         startScreen.classList.add("hidden");
         questionScreen.classList.remove("hidden");
+        questionScreen.classList.remove("question-exit");
         placeNoButton();
         growYes();
         spawnHearts();
+        setupParallax();
       });
 
       noBtn.addEventListener("mouseenter", handleNoHover);
