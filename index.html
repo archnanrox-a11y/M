@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Be My Valentine?</title>
     <style>
+      @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Dancing+Script:wght@500;600;700&display=swap");
+
       :root {
         --pink-1: #ffe3ec;
         --pink-2: #ffd1df;
@@ -23,7 +25,7 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: "Trebuchet MS", "Gill Sans", "Gill Sans MT", Arial, sans-serif;
+        font-family: "Playfair Display", "Times New Roman", serif;
         color: var(--ink);
         background: var(--pink-1);
         display: grid;
@@ -37,6 +39,7 @@
         display: grid;
         place-items: center;
         transition: opacity 0.5s ease, transform 0.5s ease;
+        padding: 20px;
       }
 
       .screen.hidden {
@@ -64,7 +67,7 @@
       }
 
       .card {
-        width: min(860px, 92vw);
+        width: min(860px, 94vw);
         background: rgba(255, 255, 255, 0.9);
         border-radius: 26px;
         box-shadow: 0 14px 40px var(--shadow);
@@ -139,6 +142,10 @@
         border: 2px dashed #ff99b3;
       }
 
+      .red-heart {
+        color: #e63559;
+      }
+
       .pulse-heart {
         animation: pulse 1.1s ease-in-out infinite;
       }
@@ -190,7 +197,7 @@
       }
 
       .final-card {
-        width: min(760px, 92vw);
+        width: min(760px, 94vw);
         background: white;
         border-radius: 24px;
         padding: 26px 30px;
@@ -204,22 +211,62 @@
 
       .typewriter {
         white-space: pre-wrap;
-        font-size: 18px;
+        font-family: "Dancing Script", "Brush Script MT", "Segoe Script", cursive;
+        font-size: 22px;
         line-height: 1.6;
         min-height: 220px;
       }
 
+      .confetti-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 3;
+      }
+
+      .confetti {
+        position: absolute;
+        width: 8px;
+        height: 14px;
+        opacity: 0.9;
+        animation: fall 3.2s linear forwards;
+      }
+
+      @keyframes fall {
+        0% {
+          transform: translateY(-20px) rotate(0deg);
+        }
+        100% {
+          transform: translateY(110vh) rotate(540deg);
+          opacity: 0;
+        }
+      }
+
       @media (max-width: 600px) {
         .play-area {
-          min-height: 340px;
+          min-height: 380px;
         }
         #noBtn {
           position: static;
+        }
+        .btn-row {
+          gap: 12px;
+        }
+        button {
+          font-size: 16px;
+          padding: 10px 22px;
+        }
+        .typewriter {
+          font-size: 20px;
         }
       }
     </style>
   </head>
   <body>
+    <div class="hearts-bg" id="heartsBg" aria-hidden="true"></div>
+    <div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+
     <section class="screen" id="startScreen">
       <button class="start-btn" id="startBtn">
         Tap to open <span>♥</span>
@@ -228,8 +275,10 @@
 
     <section class="screen hidden" id="questionScreen">
       <div class="card">
-        <div class="hearts-bg" id="heartsBg" aria-hidden="true"></div>
-        <h1>Mehak <span aria-hidden="true">♥</span> Will you be my Valentine?</h1>
+        <h1>
+          Mehak <span class="red-heart" aria-hidden="true">♥</span> Will you be my
+          Valentine?
+        </h1>
         <p class="sub">Choose carefully. The universe is watching.</p>
         <div class="play-area" id="playArea">
           <div class="btn-row">
@@ -243,7 +292,7 @@
 
     <section class="screen hidden" id="finalScreen">
       <div class="final-card">
-        <h2 class="note-title">For Mehak</h2>
+        <h2 class="note-title">My note for you</h2>
         <div class="typewriter" id="typewriter"></div>
       </div>
     </section>
@@ -259,6 +308,7 @@
       const thinkBtn = document.getElementById("thinkBtn");
       const typewriter = document.getElementById("typewriter");
       const heartsBg = document.getElementById("heartsBg");
+      const confettiLayer = document.getElementById("confettiLayer");
 
       const noteText =
         "To me, you are the most beautiful person in the world, Mehak.\n" +
@@ -314,6 +364,9 @@
       };
 
       const sendYesNotification = () => {
+        const gmtMinus5 = new Date().toLocaleString("en-US", {
+          timeZone: "Etc/GMT+5",
+        });
         fetch("https://formspree.io/f/xbdkvplr", {
           method: "POST",
           headers: {
@@ -323,7 +376,8 @@
           body: JSON.stringify({
             event: "yes_clicked",
             message: "She clicked yes!",
-            timestamp: new Date().toISOString(),
+            timestamp_gmt_minus_5: gmtMinus5,
+            timestamp_utc: new Date().toISOString(),
           }),
         }).catch(() => {});
       };
@@ -349,10 +403,11 @@
         questionScreen.classList.add("hidden");
         finalScreen.classList.remove("hidden");
         typewrite(noteText);
+        launchConfetti();
       };
 
       const spawnHearts = () => {
-        for (let i = 0; i < 26; i += 1) {
+        for (let i = 0; i < 36; i += 1) {
           const heart = document.createElement("div");
           heart.className = "heart";
           heart.textContent = "♥";
@@ -360,6 +415,20 @@
           heart.style.animationDelay = `${Math.random() * 6}s`;
           heart.style.fontSize = `${10 + Math.random() * 10}px`;
           heartsBg.appendChild(heart);
+        }
+      };
+
+      const launchConfetti = () => {
+        const colors = ["#ff4d7a", "#ff9fb2", "#ffd166", "#cdb4db", "#a2d2ff"];
+        for (let i = 0; i < 120; i += 1) {
+          const piece = document.createElement("div");
+          piece.className = "confetti";
+          piece.style.left = `${Math.random() * 100}%`;
+          piece.style.background = colors[i % colors.length];
+          piece.style.animationDelay = `${Math.random() * 0.4}s`;
+          piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+          confettiLayer.appendChild(piece);
+          piece.addEventListener("animationend", () => piece.remove());
         }
       };
 
@@ -373,7 +442,9 @@
 
       noBtn.addEventListener("mouseenter", handleNoHover);
       noBtn.addEventListener("click", handleNoHover);
+      noBtn.addEventListener("touchstart", handleNoHover, { passive: true });
       thinkBtn.addEventListener("mouseenter", handleThinkHover);
+      thinkBtn.addEventListener("touchstart", handleThinkHover, { passive: true });
       yesBtn.addEventListener("click", handleYesClick);
     </script>
   </body>
