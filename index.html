@@ -16,6 +16,9 @@
         --accent-dark: #e83b69;
         --soft: #fff2f7;
         --shadow: rgba(0, 0, 0, 0.12);
+        --gold-1: #d7b46a;
+        --gold-2: #f4e1b5;
+        --gold-3: #b88b3a;
       }
 
       * {
@@ -27,7 +30,7 @@
         min-height: 100vh;
         font-family: "Playfair Display", "Times New Roman", serif;
         color: var(--ink);
-        background: var(--pink-1);
+        background: radial-gradient(circle at 20% 10%, #fff7fb, var(--pink-1) 55%, #f6c8d6 100%);
         display: grid;
         place-items: center;
         overflow: hidden;
@@ -38,14 +41,38 @@
         inset: 0;
         display: grid;
         place-items: center;
-        transition: opacity 0.5s ease, transform 0.5s ease;
+        transition: opacity 0.7s ease, transform 0.7s ease;
         padding: 20px;
       }
 
       .screen.hidden {
         opacity: 0;
         pointer-events: none;
-        transform: scale(0.98);
+        transform: translateY(8px) scale(0.985);
+      }
+
+      .vignette {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.18) 100%);
+        z-index: 2;
+      }
+
+      .grain {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image: repeating-radial-gradient(
+          circle at 50% 50%,
+          rgba(255, 255, 255, 0.06) 0,
+          rgba(255, 255, 255, 0.06) 1px,
+          rgba(0, 0, 0, 0.04) 2px,
+          rgba(0, 0, 0, 0.04) 3px
+        );
+        mix-blend-mode: soft-light;
+        opacity: 0.25;
+        z-index: 1;
       }
 
       .start-btn {
@@ -60,6 +87,13 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
+        letter-spacing: 0.6px;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+      }
+
+      .start-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
       }
 
       .start-btn span {
@@ -68,23 +102,39 @@
 
       .card {
         width: min(860px, 94vw);
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.55);
         border-radius: 26px;
         box-shadow: 0 14px 40px var(--shadow);
-        padding: 30px 32px 36px;
+        padding: 32px 34px 28px;
         position: relative;
+        backdrop-filter: blur(10px);
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        padding: 1.5px;
+        border-radius: 26px;
+        background: linear-gradient(135deg, rgba(244, 225, 181, 0.9), rgba(184, 139, 58, 0.6), rgba(255, 255, 255, 0.4));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
       }
 
       h1 {
         margin: 0 0 8px;
         text-align: center;
         font-size: clamp(26px, 4.6vw, 38px);
+        letter-spacing: 0.8px;
       }
 
       .sub {
         text-align: center;
         margin: 0 0 20px;
         color: #5f5f5f;
+        letter-spacing: 0.4px;
       }
 
       .play-area {
@@ -110,6 +160,31 @@
         cursor: pointer;
         transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
         box-shadow: 0 6px 16px var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      button::after {
+        content: "";
+        position: absolute;
+        top: -120%;
+        left: -40%;
+        width: 160%;
+        height: 240%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 55%);
+        transform: translateX(-60%) rotate(10deg);
+        opacity: 0;
+        transition: opacity 0.25s ease, transform 0.35s ease;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
+      }
+
+      button:hover::after {
+        opacity: 1;
+        transform: translateX(0) rotate(10deg);
       }
 
       button:focus-visible {
@@ -118,9 +193,11 @@
       }
 
       #yesBtn {
-        background: var(--accent);
+        background: linear-gradient(135deg, #ff5b8a, #ff3a6f);
         color: white;
         font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
       }
 
       #yesBtn.locked {
@@ -178,8 +255,8 @@
         bottom: -30px;
         font-size: 14px;
         color: #ff6a8d;
-        opacity: 0.65;
-        animation: floatUp 7s linear infinite;
+        opacity: 0.35;
+        animation: floatUp 12s linear infinite;
       }
 
       @keyframes floatUp {
@@ -198,10 +275,27 @@
 
       .final-card {
         width: min(760px, 94vw);
-        background: white;
+        background: #fffafc;
         border-radius: 24px;
-        padding: 34px 34px 38px;
+        padding: 38px 38px 44px;
         box-shadow: 0 14px 40px var(--shadow);
+        position: relative;
+      }
+
+      .final-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 24px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0));
+        pointer-events: none;
+      }
+
+      .letter-divider {
+        height: 1px;
+        width: 100%;
+        background: linear-gradient(90deg, rgba(184, 139, 58, 0), rgba(184, 139, 58, 0.6), rgba(184, 139, 58, 0));
+        margin: 10px 0 18px;
       }
 
       .typewriter {
@@ -226,6 +320,15 @@
         height: 14px;
         opacity: 0.9;
         animation: fall 3.2s linear forwards;
+      }
+
+      .monogram {
+        margin-top: 18px;
+        text-align: center;
+        font-size: 16px;
+        letter-spacing: 4px;
+        color: rgba(184, 139, 58, 0.9);
+        text-transform: uppercase;
       }
 
       @keyframes fall {
@@ -258,6 +361,8 @@
   <body>
     <div class="hearts-bg" id="heartsBg" aria-hidden="true"></div>
     <div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
 
     <section class="screen" id="startScreen">
       <button class="start-btn" id="startBtn">
@@ -279,11 +384,13 @@
           </div>
           <button id="noBtn">No</button>
         </div>
+        <div class="monogram">M ♥</div>
       </div>
     </section>
 
     <section class="screen hidden" id="finalScreen">
       <div class="final-card">
+        <div class="letter-divider"></div>
         <div class="typewriter" id="typewriter"></div>
       </div>
     </section>
@@ -398,13 +505,14 @@
       };
 
       const spawnHearts = () => {
-        for (let i = 0; i < 36; i += 1) {
+        for (let i = 0; i < 18; i += 1) {
           const heart = document.createElement("div");
           heart.className = "heart";
           heart.textContent = "♥";
           heart.style.left = `${Math.random() * 100}%`;
-          heart.style.animationDelay = `${Math.random() * 6}s`;
-          heart.style.fontSize = `${10 + Math.random() * 10}px`;
+          heart.style.animationDelay = `${Math.random() * 10}s`;
+          heart.style.fontSize = `${8 + Math.random() * 12}px`;
+          heart.style.opacity = `${0.2 + Math.random() * 0.25}`;
           heartsBg.appendChild(heart);
         }
       };
